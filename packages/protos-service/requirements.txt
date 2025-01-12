@@ -1,0 +1,14 @@
+annotated-types==0.7.0
+build==1.2.2.post1
+grpcio==1.68.1
+grpcio-tools==1.68.1
+mypy-protobuf==3.6.0
+packaging==24.2
+protobuf==5.29.2
+protobuf_to_pydantic==0.3.0.3
+pydantic==2.10.4
+pydantic_core==2.27.2
+pyproject_hooks==1.2.0
+setuptools==75.6.0
+types-protobuf==5.29.1.20241207
+typing_extensions==4.12.2

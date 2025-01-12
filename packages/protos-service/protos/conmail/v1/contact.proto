@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package conmail.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message Contact {
+    string id = 1;
+
+    string email = 2;
+
+    google.protobuf.Timestamp create_time = 3;
+    google.protobuf.Timestamp update_time = 4;
+    google.protobuf.Timestamp delete_time = 5;
+
+    message Name {
+        string first = 1;
+        string middle = 2;
+        string last = 3;
+    }
+
+    Name name = 6;
+
+    message Address {
+        string street = 1;
+        string city = 2;
+        string country = 3;
+        string zip = 4;
+    }
+
+    Address address = 7;
+
+    string organization_id = 8;
+}
+
+message ContactEvent {
+    enum Type {
+        CREATED = 0;
+        UPDATED = 1;
+        DELETED = 2;
+    }
+
+    Type type = 1;
+
+    Contact contact = 2;
+}

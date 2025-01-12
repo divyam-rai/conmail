@@ -1,0 +1,48 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: conmail-kafka-storage-class
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: conmail-kafka-one
+spec:
+  capacity:
+    storage: 7Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: conmail-kafka-storage-class
+  hostPath:
+     path: /mnt/data/broker-1-data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: conmail-zookeeper-data
+spec:
+  capacity:
+    storage: 6Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: conmail-kafka-storage-class
+  hostPath:
+     path: /mnt/data/zookeeper-data
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: conmail-zookeeper-txnlogs
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: conmail-kafka-storage-class
+  hostPath:
+     path: /mnt/data/zookeeper-txnlogs

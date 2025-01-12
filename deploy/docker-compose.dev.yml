@@ -1,0 +1,17 @@
+version: '3'
+
+volumes:
+  pgdata-conmail:
+
+services:
+  postgres:
+    image: "postgres:13"
+    restart: unless-stopped
+    ports:
+      - "5431:5432"
+    environment:
+      - POSTGRES_USER=conmail
+      - POSTGRES_PASSWORD=changeme
+      - POSTGRES_DB=conmail
+    volumes:
+      - pgdata-conmail:/var/lib/postgresql/data

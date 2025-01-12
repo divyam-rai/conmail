@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: conmail-postgres
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/conmail-postgres"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: conmail-postgres
+  labels:
+    conmail.io/service: conmail-postgres
+    conmail.io/component: database
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: conmail-postgres
+  labels:
+    conmail.io/service: conmail-postgres
+    conmail.io/component: database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      conmail.io/service: conmail-postgres
+  template:
+    metadata:
+      labels:
+        conmail.io/service: conmail-postgres
+        conmail.io/component: database
+    spec:
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: conmail-postgres
+      containers:
+        - name: postgres
+          image: public.ecr.aws/docker/library/postgres:16
+          args: ["-c", "max_connections=300"]
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              value: conmail
+            - name: POSTGRES_DB
+              value: conmail
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: conmail-postgres-secrets
+                  key: postgres-password
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: postgres-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: conmail-postgres
+  labels:
+    conmail.io/service: conmail-postgres
+    conmail.io/component: database
+spec:
+  selector:
+    conmail.io/service: conmail-postgres
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
