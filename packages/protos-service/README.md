@@ -1,5 +1,9 @@
-# Example Package
+# Protos Service
 
-This is a simple example package. You can use
-[GitHub-flavored Markdown](https://guides.github.com/features/mastering-markdown/)
-to write your content.
+This service hosts and serves the protobuf definitions required by the project. The output of this service is a package that can be installed by other services to get python definitions of the protobuf messages.
+
+To build the package:
+`python main.py`
+
+To install the package from other services:
+`pip install <path to .whl file>`
