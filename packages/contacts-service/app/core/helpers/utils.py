@@ -27,7 +27,7 @@ def get_logger(log_name: str):
 
 def raise_error(key: str, data= {}, error= {}) -> Response:
     error_info = ERROR_CODES.get(key, ERROR_CODES["INTERNAL"])
-    return response(error_info[0], error_info[1], data, error)
+    return response(error_info[0], { "error": error_info[1] })
 
 def response(status: int, data={}) -> Response:
     return Response(

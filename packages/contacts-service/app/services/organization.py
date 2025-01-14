@@ -37,7 +37,6 @@ class OrganizationService:
             raise NotFound('organization')
 
         rows_deleted = self._repository.delete(id)
-        print(rows_deleted)
         if rows_deleted <= 0:
             return False
 

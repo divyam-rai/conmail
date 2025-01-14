@@ -14,7 +14,7 @@ def get_organization(id: UUID):
     organization = organization_service.get(id)
     if organization is None:
         raise NotFound('organization')
-    return response(201, organization.to_dict())
+    return response(200, organization.to_dict())
 
 @organization_bp.route('/', methods=["POST"])
 def create_organization():
