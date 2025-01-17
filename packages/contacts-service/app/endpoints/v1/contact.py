@@ -1,8 +1,9 @@
 from flask import Blueprint, request
-from app.core.schemas.contact import CreateContactRequest
+from app.core.schemas.contact import CreateContactRequest, CreateContactImportRequest
 from uuid import UUID
 
 from app.core.errors.not_found import NotFound
+from app.core.errors.validation_error import ValidationError
 from app.core.helpers.utils import response
 
 from app.core.schemas import contact
@@ -20,9 +21,7 @@ def get_contact(id: UUID):
 
 @contact_bp.route("/", methods=["POST"])
 def create_contact():
-    body = request.json
-
-    contact_request = CreateContactRequest.from_request(body)
+    contact_request = CreateContactRequest.from_request(request.json)
     contact = contact_service.create(contact_request)
     return response(201, contact.to_dict())
 
@@ -32,3 +31,9 @@ def delete_contact(id: UUID):
     if not row_deleted:
         return response(409, { "error": "failed to delete organization" })
     return response(204)
+
+@contact_bp.route("/import/request", methods=["POST"])
+def request_contacts_import():    
+    contact_import_request = CreateContactImportRequest.from_request(request.json)
+    contact_import = contact_service.request_import(contact_import_request)
+    return response(200, contact_import.to_dict())

@@ -6,7 +6,7 @@ from app.db import db
 class ContactRepository:
     @staticmethod
     def get(id: UUID) -> schema.Contact:
-        contact = db.session.query(Contact).get(id)
+        contact = db.session.get(Contact, id)
         if contact is None:
             return None
         return schema.Contact.from_model(contact)
@@ -24,3 +24,11 @@ class ContactRepository:
         db.session.commit()
 
         return row_count
+    
+    @staticmethod
+    def create_import_request(import_request: schema.ContactImport) -> schema.ContactImport:
+        db_contact_import = import_request.to_model()
+        db.session.add(db_contact_import)
+        db.session.commit()
+        
+        return schema.ContactImport.from_model(db_contact_import)

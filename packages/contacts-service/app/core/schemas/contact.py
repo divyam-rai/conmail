@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from app.core.errors.validation_error import ValidationError
 from conmail.v1.contact_pb2 import Contact as ContactProto
 from app.repository.models.contact import Contact as ContactModel
+from app.repository.models.contact_import import ContactImport as ContactImportModel, ContactImportStatus
+
 
 @dataclass
 class ContactName:
@@ -146,7 +148,7 @@ class Contact:
             address_zip= self.address.zip,
             organization_id= self.organization_id
         )
-    
+
 @dataclass
 class CreateContactRequest(Contact):
     @classmethod
@@ -168,4 +170,94 @@ class CreateContactRequest(Contact):
             name= contact_name,
             address= contact_address,
             organization_id= request['organization_id'],
+        )
+
+@dataclass
+class ContactImport:
+    organization_id: UUID
+    file_name: str
+
+    updated_at: datetime = datetime.now(timezone.utc)
+    created_at: Optional[datetime] = None
+    deleted_at: Optional[datetime] = None
+
+    id: Optional[UUID] = None
+    status: Optional[ContactImportStatus] = ContactImportStatus.CREATED
+
+    @staticmethod
+    def format_timestamp_as_string(timestamp):
+        if timestamp is None:
+            return timestamp
+        
+        return datetime.strftime(timestamp, '%Y-%m-%d %H:%M:%S')
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "file_name": self.file_name,
+            "status": self.status.value,
+            "organization_id": str(self.organization_id),
+            "created_at": self.format_timestamp_as_string(self.created_at),
+            "updated_at": self.format_timestamp_as_string(self.updated_at),
+        }
+    
+    def to_model(self):
+        return ContactImportModel(
+            id= self.id,
+            file_name= self.file_name,
+            status= self.status,
+            organization_id= self.organization_id,
+            created_at= self.created_at,
+            updated_at= self.updated_at,
+            deleted_at= self.deleted_at,
+        )
+    
+    @classmethod
+    def from_model(cls, model: ContactImportModel):
+        return cls(
+            id= model.id,
+            file_name= model.file_name,
+            status= model.status,
+            organization_id= model.organization_id,
+            created_at= model.created_at,
+            updated_at= model.updated_at,
+            deleted_at= model.deleted_at,
+        )
+
+@dataclass
+class CreateContactImportRequest(ContactImport):
+    @classmethod
+    def from_request(cls, payload: dict):
+        if 'organization_id' not in payload or 'file_name' not in payload:
+            raise ValidationError('missing fields in request payload')
+
+        return cls(
+            organization_id= payload['organization_id'],
+            file_name= payload['file_name']
+        )
+
+    def __post_init__(self):
+        # TODO: sanitize file_name and check for extension
+        name_length = len(self.file_name)
+
+        if name_length < 3 or name_length > 10:
+            raise ValidationError('file_name does not meet length requirements')
+
+@dataclass
+class CreateContactImportResponse(ContactImport):
+    upload_url: Optional[str] = None
+
+    def to_dict(self):
+        return { **super().to_dict(), "upload_url": self.upload_url }
+    
+    @classmethod
+    def from_contact_import(cls, contact_import: ContactImport):
+        return cls(
+            id= contact_import.id,
+            file_name= contact_import.file_name,
+            status= contact_import.status,
+            organization_id= contact_import.organization_id,
+            created_at= contact_import.created_at,
+            updated_at= contact_import.updated_at,
+            deleted_at= contact_import.deleted_at,
         )

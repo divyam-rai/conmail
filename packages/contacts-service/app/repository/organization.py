@@ -8,7 +8,7 @@ from app.repository.models.organization import Organization as OrganizationDb
 class OrganizationRepository:
     @staticmethod
     def get(id: UUID) -> Optional[OrganizationSchema]:
-        organization = db.session.query(OrganizationDb).get(id)        
+        organization = db.session.get(OrganizationDb, id)
         if organization is None:
             return None
         return OrganizationSchema.from_db(organization)

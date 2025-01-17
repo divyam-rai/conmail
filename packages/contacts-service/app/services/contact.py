@@ -4,6 +4,7 @@ from uuid import UUID
 from conmail.v1.contact_pb2 import ContactEvent
 
 from app.config import Config
+from app.core.helpers.s3 import ObjectStorage
 from app.core.helpers.kafka import produce
 from app.core.helpers.utils import raise_error, get_logger
 from app.core.errors.not_found import NotFound
@@ -20,6 +21,8 @@ class ContactService:
     def __init__(self):
         self._repository = ContactRepository()
         self.topic = Config.KAFKA_TOPIC_CONTACTS
+        self.bucket_imports = Config.OBJECT_STORAGE_CONTACTS_BUCKET
+        self.bucket_path_prefix = Config.OBJECT_STORAGE_CONTACTS_DEFAULT_PREFIX
     
     def get(self, id: UUID) -> schema.Contact:
         return self._repository.get(id)
@@ -43,7 +46,6 @@ class ContactService:
         except sqlalchemy.exc.IntegrityError:
             raise NotUnique()
 
-
     def delete(self, id: UUID) -> bool:
         contact = self._repository.get(id)
         if contact is None:
@@ -61,3 +63,20 @@ class ContactService:
         produce(self.topic, contact_event, contact.id)
 
         return True
+    
+    def request_import(self, contact_import_request: schema.CreateContactImportRequest) -> schema.CreateContactImportResponse:
+        organization = organization_service.get(contact_import_request.organization_id)
+        if organization is None:
+            raise NotFound('organization')
+        
+        contact_import = self._repository.create_import_request(contact_import_request)
+        response = schema.CreateContactImportResponse.from_contact_import(contact_import)
+
+        upload_url = ObjectStorage().create_presigned_url(
+            operation='put_object',
+            bucket= self.bucket_imports,
+            key= f"{self.bucket_path_prefix}/{contact_import_request.file_name}"
+        )
+        response.upload_url = upload_url
+
+        return response
